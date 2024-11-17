@@ -14,6 +14,7 @@ pthread_mutex_t start_mutex, queue_mutex;
 pthread_cond_t start_condition;
 bool start;
 
+/* Function to sort contestants by the work ammount of them. */
 int contest_compare(const void *va, const void *vb) {
     const size_t a = *(size_t*)va;
     const size_t b = *(size_t*)vb;
@@ -21,6 +22,8 @@ int contest_compare(const void *va, const void *vb) {
         || work_ammount[a] == work_ammount[b] && a > b;
 }
 
+/* Each contestant needs to pickup an item from the queue and
+ * work on it. This continues until the queue is empty. */
 void *contest_work(void *vid) {
     size_t id = (size_t)vid;
     size_t done = 0;
@@ -45,6 +48,7 @@ void *contest_work(void *vid) {
     work_ammount[id] = done;
 }
 
+/* Setup the threads, mutexes and the start condition. */
 void contest_prepare() {
     queue_init();
     pthread_mutex_init(&start_mutex, NULL);
@@ -55,6 +59,7 @@ void contest_prepare() {
     }
 }
 
+/* Broadcasts a signal to start the contest. */
 void contest_start() {
     pthread_mutex_lock(&start_mutex);
     start = true;
@@ -62,6 +67,9 @@ void contest_start() {
     pthread_mutex_unlock(&start_mutex);
 }
 
+/* Join the threads and shows the contestants sorted by
+ * their work ammount (the first one is the one with the
+ * most work). */
 void contest_finish() {
     size_t classification[NWORKERS];
     for(size_t i = 0; i < NWORKERS; ++i) {
